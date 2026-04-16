@@ -27,7 +27,7 @@ supabase: Client = create_client(os.environ["SUPABASE_URL"], os.environ["SUPABAS
 # Per-user conversation history (in-memory; swap for Redis in production)
 conversation_history: dict[int, list] = {}
 
-RACE_DATE = os.getenv("RACE_DATE", "2025-09-21")  # Sydney Marathon date
+RACE_DATE = os.getenv("RACE_DATE", "2026-08-30")  # Sydney Marathon date
 
 # ── Supabase data fetching ────────────────────────────────────────────────────
 
