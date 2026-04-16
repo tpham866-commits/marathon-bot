@@ -35,7 +35,7 @@ def refresh_strava_token() -> str:
     return data["access_token"]
 
 
-def fetch_activities(token: str, after_days: int = 30) -> list[dict]:
+def fetch_activities(token: str, after_days: int = 365) -> list[dict]:
     after_ts = int((datetime.utcnow() - timedelta(days=after_days)).timestamp())
     activities = []
     page = 1
