@@ -12,6 +12,8 @@ from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, fil
 from anthropic import Anthropic
 from supabase import create_client, Client
 from dotenv import load_dotenv
+import threading
+import time
 
 load_dotenv()
 logging.basicConfig(level=logging.INFO, format="%(asctime)s — %(levelname)s — %(message)s")
@@ -258,6 +260,18 @@ async def handle_message(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
 
 # ── Entry point ───────────────────────────────────────────────────────────────
 
+def sync_loop():
+    """Run Strava sync on startup and every hour."""
+    while True:
+        try:
+            from sync_strava import main as strava_sync
+            strava_sync()
+            log.info("Strava sync complete")
+        except Exception as e:
+            log.error(f"Sync error: {e}")
+        time.sleep(3600)
+
+
 def main():
     token = os.environ["TELEGRAM_BOT_TOKEN"]
     app = ApplicationBuilder().token(token).build()
@@ -269,6 +283,8 @@ def main():
     app.add_handler(CommandHandler("clear", cmd_clear))
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
 
+    sync_thread = threading.Thread(target=sync_loop, daemon=True)
+    sync_thread.start()
     log.info("Marathon Coach bot is running…")
     app.run_polling()
 
