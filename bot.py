@@ -39,7 +39,7 @@ def fetch_recent_activities(days: int = 14) -> list[dict]:
         .select("*")
         .gte("start_date", since)
         .order("start_date", desc=True)
-        .limit(20)
+        .limit(300)
         .execute()
     )
     return resp.data or []
