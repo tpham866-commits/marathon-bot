@@ -100,7 +100,7 @@ def fetch_weekly_summary() -> dict:
 
 def build_system_prompt() -> str:
     """Assemble a rich coaching context from live Supabase data."""
-    activities = fetch_recent_activities(14)
+    activities = fetch_recent_activities(120)
     sleep = fetch_sleep_scores(7)
     planned = fetch_planned_workouts(7)
     weekly = fetch_weekly_summary()
