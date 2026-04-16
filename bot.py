@@ -106,6 +106,7 @@ def build_system_prompt() -> str:
     weekly = fetch_weekly_summary()
 
     days_to_race = (datetime.strptime(RACE_DATE, "%Y-%m-%d") - datetime.utcnow()).days
+    today_str = datetime.utcnow().strftime("%B %d, %Y")
 
     acts_text = "\n".join(
         f"  • {a.get('start_date','')[:10]} | {a.get('sport_type','')} | "
@@ -133,6 +134,7 @@ You have direct access to the athlete's live training data pulled from Strava, G
 
 ATHLETE PROFILE
 ───────────────
+Today's date: {today_str}
 Race: Sydney Marathon ({RACE_DATE})
 Days to race: {days_to_race}
 
