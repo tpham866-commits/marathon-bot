@@ -100,9 +100,9 @@ def fetch_weekly_summary() -> dict:
 
 def build_system_prompt() -> str:
     """Assemble a rich coaching context from live Supabase data."""
-    activities = fetch_recent_activities(120)
-    sleep = fetch_sleep_scores(7)
-    planned = fetch_planned_workouts(7)
+    activities = fetch_recent_activities(365)
+    sleep = fetch_sleep_scores(60)
+    planned = fetch_planned_workouts(60)
     weekly = fetch_weekly_summary()
 
     days_to_race = (datetime.strptime(RACE_DATE, "%Y-%m-%d") - datetime.utcnow()).days
