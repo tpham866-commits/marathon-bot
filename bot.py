@@ -263,14 +263,20 @@ async def handle_message(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
 # ── Entry point ───────────────────────────────────────────────────────────────
 
 def sync_loop():
-    """Run Strava sync on startup and every hour."""
+    """Run Strava and Oura sync on startup and every hour."""
     while True:
         try:
             from sync_strava import main as strava_sync
             strava_sync()
             log.info("Strava sync complete")
         except Exception as e:
-            log.error(f"Sync error: {e}")
+            log.error(f"Strava sync error: {e}")
+        try:
+            from sync_oura import main as oura_sync
+            oura_sync()
+            log.info("Oura sync complete")
+        except Exception as e:
+            log.error(f"Oura sync error: {e}")
         time.sleep(3600)
 
 
