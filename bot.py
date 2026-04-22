@@ -211,6 +211,20 @@ async def cmd_start(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
         parse_mode="Markdown",
     )
 
+async def cmd_sync(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
+    await update.message.reply_text("Syncing your data now... ⏳")
+    try:
+        from sync_strava import main as strava_sync
+        strava_sync()
+        await update.message.reply_text("✅ Strava synced!")
+    except Exception as e:
+        await update.message.reply_text(f"❌ Strava error: {e}")
+    try:
+        from sync_oura import main as oura_sync
+        oura_sync()
+        await update.message.reply_text("✅ Oura synced!")
+    except Exception as e:
+        await update.message.reply_text(f"❌ Oura error: {e}")
 
 async def cmd_summary(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text("Pulling your weekly data…")
@@ -285,6 +299,7 @@ def main():
     token = os.environ["TELEGRAM_BOT_TOKEN"]
     app = ApplicationBuilder().token(token).build()
 
+    app.add_handler(CommandHandler("sync", cmd_sync))
     app.add_handler(CommandHandler("start", cmd_start))
     app.add_handler(CommandHandler("summary", cmd_summary))
     app.add_handler(CommandHandler("readiness", cmd_readiness))
