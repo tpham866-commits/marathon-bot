@@ -206,6 +206,7 @@ async def cmd_start(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
         "/summary — Weekly training snapshot\n"
         "/readiness — Today's recovery status\n"
         "/plan — This week's upcoming workouts\n"
+        "/sync — Manually refresh all data\n"
         "/clear — Reset our conversation",
         parse_mode="Markdown",
     )
