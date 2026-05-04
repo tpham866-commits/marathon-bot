@@ -14,6 +14,7 @@ from supabase import create_client, Client
 from dotenv import load_dotenv
 import threading
 import time
+import base64
 
 load_dotenv()
 logging.basicConfig(level=logging.INFO, format="%(asctime)s — %(levelname)s — %(message)s")
@@ -134,9 +135,16 @@ You have direct access to the athlete's live training data pulled from Strava, G
 
 ATHLETE PROFILE
 ───────────────
-Today's date: {today_str}
+CRITICAL DATE INFORMATION — DO NOT GUESS OR CALCULATE:
+Today is exactly: {today_str} ({datetime.utcnow().strftime("%A")})
+Current year: {datetime.utcnow().year}
 Race: Sydney Marathon ({RACE_DATE})
 Days to race: {days_to_race}
+
+RULES:
+- NEVER guess what day of the week a date falls on — calculate it from the date itself
+- ALWAYS use {today_str} as today's date, not your training data
+- If unsure of the day of week, say the date only (e.g. "April 25") not the day name
 
 LAST 7 DAYS — TRAINING SUMMARY
 ───────────────────────────────
@@ -274,6 +282,58 @@ async def handle_message(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
         log.error(f"Error: {e}")
         await update.message.reply_text("Something went wrong fetching your data. Try again in a moment.")
 
+async def handle_photo(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
+    user_id = update.effective_user.id
+    await ctx.bot.send_chat_action(chat_id=update.effective_chat.id, action="typing")
+
+    # Get highest resolution photo
+    photo = update.message.photo[-1]
+    file = await ctx.bot.get_file(photo.file_id)
+    
+    # Download photo as bytes
+    import io
+    photo_bytes = await file.download_as_bytearray()
+    image_data = base64.standard_b64encode(bytes(photo_bytes)).decode("utf-8")
+
+    # Get caption as the user's message, or use a default
+    caption = update.message.caption or "What do you see in this image? Give me coaching feedback if relevant."
+
+    # Add to conversation history with image
+    if user_id not in conversation_history:
+        conversation_history[user_id] = []
+    
+    history = conversation_history[user_id]
+    history.append({
+        "role": "user",
+        "content": [
+            {
+                "type": "image",
+                "source": {
+                    "type": "base64",
+                    "media_type": "image/jpeg",
+                    "data": image_data,
+                }
+            },
+            {
+                "type": "text",
+                "text": caption
+            }
+        ]
+    })
+
+    system_prompt = build_system_prompt()
+
+    response = anthropic.messages.create(
+        model="claude-sonnet-4-5",
+        max_tokens=1024,
+        system=system_prompt,
+        messages=history,
+    )
+
+    reply = response.content[0].text
+    history.append({"role": "assistant", "content": reply})
+
+    await update.message.reply_text(reply)
 
 # ── Entry point ───────────────────────────────────────────────────────────────
 
@@ -295,6 +355,7 @@ def sync_loop():
         time.sleep(3600)
 
 
+
 def main():
     token = os.environ["TELEGRAM_BOT_TOKEN"]
     app = ApplicationBuilder().token(token).build()
@@ -305,7 +366,9 @@ def main():
     app.add_handler(CommandHandler("readiness", cmd_readiness))
     app.add_handler(CommandHandler("plan", cmd_plan))
     app.add_handler(CommandHandler("clear", cmd_clear))
+    app.add_handler(MessageHandler(filters.PHOTO, handle_photo))
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
+    
 
     sync_thread = threading.Thread(target=sync_loop, daemon=True)
     sync_thread.start()
