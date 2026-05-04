@@ -117,7 +117,7 @@ def build_system_prompt() -> str:
 
     acts_text = "\n".join(
         f"  • {a.get('start_date','')[:10]} | {a.get('sport_type','')} | "
-        f"{a.get('distance_km', 0):.1f}km | {int(a.get('duration_seconds',0)//60)}min | "
+        f"{float(a.get('distance_km') or 0):.1f}km | {int((a.get('duration_seconds') or 0)//60)}min | "
         f"HR avg {a.get('average_heartrate','—')} | Load {a.get('suffer_score','—')}"
         for a in activities
     ) or "  No activities recorded."
