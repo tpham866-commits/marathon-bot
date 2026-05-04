@@ -142,8 +142,8 @@ You have direct access to the athlete's live training data pulled from Strava, G
 ATHLETE PROFILE
 ───────────────
 CRITICAL DATE INFORMATION — DO NOT GUESS OR CALCULATE:
-Today is exactly: {today_str} ({datetime.utcnow().strftime("%A")})
-Current year: {datetime.utcnow().year}
+Today is exactly: {today_str} ({now.strftime("%A")})
+Current year: {now.year}
 Race: Sydney Marathon ({RACE_DATE})
 Days to race: {days_to_race}
 
