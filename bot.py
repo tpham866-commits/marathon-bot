@@ -7,6 +7,7 @@ and replies to your messages as a personal running coach.
 import os
 import logging
 from datetime import datetime, timedelta
+import pytz
 from telegram import Update
 from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, filters, ContextTypes
 from anthropic import Anthropic
@@ -106,8 +107,10 @@ def build_system_prompt() -> str:
     planned = fetch_planned_workouts(60)
     weekly = fetch_weekly_summary()
 
-    days_to_race = (datetime.strptime(RACE_DATE, "%Y-%m-%d") - datetime.utcnow()).days
-    today_str = datetime.utcnow().strftime("%B %d, %Y")
+    days_to_race = (datetime.strptime(RACE_DATE, "%Y-%m-%d") - now.replace(tzinfo=None)).days
+    houston_tz = pytz.timezone("America/Chicago")
+    now = datetime.now(houston_tz)
+    today_str = now.strftime("%B %d, %Y")
 
     acts_text = "\n".join(
         f"  • {a.get('start_date','')[:10]} | {a.get('sport_type','')} | "
