@@ -102,15 +102,18 @@ def fetch_weekly_summary() -> dict:
 
 def build_system_prompt() -> str:
     """Assemble a rich coaching context from live Supabase data."""
+    houston_tz = pytz.timezone("America/Chicago")
+    now = datetime.now(houston_tz)
+    today_str = now.strftime("%B %d, %Y")
+    days_to_race = (datetime.strptime(RACE_DATE, "%Y-%m-%d") - now.replace(tzinfo=None)).days
+    
     activities = fetch_recent_activities(30)
     sleep = fetch_sleep_scores(30)
     planned = fetch_planned_workouts(60)
     weekly = fetch_weekly_summary()
 
-    days_to_race = (datetime.strptime(RACE_DATE, "%Y-%m-%d") - now.replace(tzinfo=None)).days
-    houston_tz = pytz.timezone("America/Chicago")
-    now = datetime.now(houston_tz)
-    today_str = now.strftime("%B %d, %Y")
+
+    
 
     acts_text = "\n".join(
         f"  • {a.get('start_date','')[:10]} | {a.get('sport_type','')} | "
