@@ -296,18 +296,19 @@ async def handle_message(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
 
     await ctx.bot.send_chat_action(chat_id=update.effective_chat.id, action="typing")
 
-    try:
-        reply = chat_with_claude(user_id, text)
-# Split long messages into chunks
-        if len(reply) <= 4096:
-    await update.message.reply_text(reply)
-else:
-    chunks = [reply[i:i+4096] for i in range(0, len(reply), 4096)]
-    for chunk in chunks:
-        await update.message.reply_text(chunk)    except Exception as e:
-        log.error(f"Error: {e}")
-        await update.message.reply_text("Something went wrong fetching your data. Try again in a moment.")
-
+  try:
+    reply = chat_with_claude(user_id, text)
+    # Split long messages into chunks
+    if len(reply) <= 4096:
+        await update.message.reply_text(reply)
+    else:
+        chunks = [reply[i:i+4096] for i in range(0, len(reply), 4096)]
+        for chunk in chunks:
+            await update.message.reply_text(chunk)
+except Exception as e:
+    log.error(f"Error: {e}")
+    await update.message.reply_text("Something went wrong fetching your data. Try again in a moment.")
+    
 async def handle_photo(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
     await ctx.bot.send_chat_action(chat_id=update.effective_chat.id, action="typing")
