@@ -299,7 +299,7 @@ async def handle_message(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
     try:
         reply = chat_with_claude(user_id, text)
 # Split long messages into chunks
-if len(reply) <= 4096:
+        if len(reply) <= 4096:
     await update.message.reply_text(reply)
 else:
     chunks = [reply[i:i+4096] for i in range(0, len(reply), 4096)]
