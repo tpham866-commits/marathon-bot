@@ -242,48 +242,57 @@ async def cmd_sync(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
 
 async def cmd_summary(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text("Pulling your weekly data…")
-    reply = chat_with_claude(
-        update.effective_user.id,
-        "Give me a concise summary of my training load and key metrics from the last 7 days. "
-        "Flag anything I should pay attention to.",
-    )
-# Split long messages into chunks
-if len(reply) <= 4096:
-    await update.message.reply_text(reply)
-else:
-    chunks = [reply[i:i+4096] for i in range(0, len(reply), 4096)]
-    for chunk in chunks:
-        await update.message.reply_text(chunk)
+    try:
+        reply = chat_with_claude(
+            update.effective_user.id,
+            "Give me a concise summary of my training load and key metrics from the last 7 days. "
+            "Flag anything I should pay attention to.",
+        )
+        # Split long messages into chunks
+        if len(reply) <= 4096:
+            await update.message.reply_text(reply)
+        else:
+            chunks = [reply[i:i+4096] for i in range(0, len(reply), 4096)]
+            for chunk in chunks:
+                await update.message.reply_text(chunk)
+    except Exception as e:
+        await update.message.reply_text(f"❌ Error: {e}")
 
 async def cmd_readiness(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text("Checking your recovery status…")
-    reply = chat_with_claude(
-        update.effective_user.id,
-        "Based on my sleep, HRV, and recent training load, how recovered am I today? "
-        "Should I go ahead with today's planned session as-is, modify it, or rest?",
-    )
-# Split long messages into chunks
-if len(reply) <= 4096:
-    await update.message.reply_text(reply)
-else:
-    chunks = [reply[i:i+4096] for i in range(0, len(reply), 4096)]
-    for chunk in chunks:
-        await update.message.reply_text(chunk)
+    try:
+        reply = chat_with_claude(
+            update.effective_user.id,
+            "Based on my sleep, HRV, and recent training load, how recovered am I today? "
+            "Should I go ahead with today's planned session as-is, modify it, or rest?",
+        )
+        # Split long messages into chunks
+        if len(reply) <= 4096:
+            await update.message.reply_text(reply)
+        else:
+            chunks = [reply[i:i+4096] for i in range(0, len(reply), 4096)]
+            for chunk in chunks:
+                await update.message.reply_text(chunk)
+    except Exception as e:
+        await update.message.reply_text(f"❌ Error: {e}")
 
 async def cmd_plan(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text("Loading your upcoming workouts…")
-    reply = chat_with_claude(
-        update.effective_user.id,
-        "What workouts do I have planned this week? Give me a brief overview and any coaching notes.",
-    )
-# Split long messages into chunks
-if len(reply) <= 4096:
-    await update.message.reply_text(reply)
-else:
-    chunks = [reply[i:i+4096] for i in range(0, len(reply), 4096)]
-    for chunk in chunks:
-        await update.message.reply_text(chunk)
-
+    try:
+        reply = chat_with_claude(
+            update.effective_user.id,
+            "What workouts do I have planned this week? Give me a brief overview and any coaching notes.",
+        )
+        # Split long messages into chunks
+        if len(reply) <= 4096:
+            await update.message.reply_text(reply)
+        else:
+            chunks = [reply[i:i+4096] for i in range(0, len(reply), 4096)]
+            for chunk in chunks:
+                await update.message.reply_text(chunk)
+    except Exception as e:
+        await update.message.reply_text(f"❌ Error: {e}")
+        
 async def cmd_clear(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
     conversation_history.pop(update.effective_user.id, None)
     await update.message.reply_text("Conversation cleared. Fresh start! 🔄")
@@ -313,60 +322,65 @@ async def handle_photo(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
     await ctx.bot.send_chat_action(chat_id=update.effective_chat.id, action="typing")
 
-    # Get highest resolution photo
-    photo = update.message.photo[-1]
-    file = await ctx.bot.get_file(photo.file_id)
-    
-    # Download photo as bytes
-    import io
-    photo_bytes = await file.download_as_bytearray()
-    image_data = base64.standard_b64encode(bytes(photo_bytes)).decode("utf-8")
+    try:
+        # Get highest resolution photo
+        photo = update.message.photo[-1]
+        file = await ctx.bot.get_file(photo.file_id)
 
-    # Get caption as the user's message, or use a default
-    caption = update.message.caption or "What do you see in this image? Give me coaching feedback if relevant."
+        # Download photo as bytes
+        import io
+        photo_bytes = await file.download_as_bytearray()
+        image_data = base64.standard_b64encode(bytes(photo_bytes)).decode("utf-8")
 
-    # Add to conversation history with image
-    if user_id not in conversation_history:
-        conversation_history[user_id] = []
-    
-    history = conversation_history[user_id]
-    history.append({
-        "role": "user",
-        "content": [
-            {
-                "type": "image",
-                "source": {
-                    "type": "base64",
-                    "media_type": "image/jpeg",
-                    "data": image_data,
+        # Get caption as the user's message, or use a default
+        caption = update.message.caption or "What do you see in this image? Give me coaching feedback if relevant."
+
+        # Add to conversation history with image
+        if user_id not in conversation_history:
+            conversation_history[user_id] = []
+
+        history = conversation_history[user_id]
+        history.append({
+            "role": "user",
+            "content": [
+                {
+                    "type": "image",
+                    "source": {
+                        "type": "base64",
+                        "media_type": "image/jpeg",
+                        "data": image_data,
+                    }
+                },
+                {
+                    "type": "text",
+                    "text": caption
                 }
-            },
-            {
-                "type": "text",
-                "text": caption
-            }
-        ]
-    })
+            ]
+        })
 
-    system_prompt = build_system_prompt()
+        system_prompt = build_system_prompt()
 
-    response = anthropic.messages.create(
-        model="claude-sonnet-4-5",
-        max_tokens=1024,
-        system=system_prompt,
-        messages=history,
-    )
+        response = anthropic.messages.create(
+            model="claude-sonnet-4-5",
+            max_tokens=1024,
+            system=system_prompt,
+            messages=history,
+        )
 
-    reply = response.content[0].text
-    history.append({"role": "assistant", "content": reply})
+        reply = response.content[0].text
+        history.append({"role": "assistant", "content": reply})
 
-# Split long messages into chunks
-if len(reply) <= 4096:
-    await update.message.reply_text(reply)
-else:
-    chunks = [reply[i:i+4096] for i in range(0, len(reply), 4096)]
-    for chunk in chunks:
-        await update.message.reply_text(chunk)
+        # Split long messages into chunks
+        if len(reply) <= 4096:
+            await update.message.reply_text(reply)
+        else:
+            chunks = [reply[i:i+4096] for i in range(0, len(reply), 4096)]
+            for chunk in chunks:
+                await update.message.reply_text(chunk)
+
+    except Exception as e:
+        log.error(f"Error: {e}")
+        await update.message.reply_text("Something went wrong processing your image. Try again in a moment.")
 # ── Entry point ───────────────────────────────────────────────────────────────
 
 def sync_loop():
