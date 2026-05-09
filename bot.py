@@ -296,7 +296,7 @@ async def handle_message(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
 
     await ctx.bot.send_chat_action(chat_id=update.effective_chat.id, action="typing")
 
-  try:
+try:
     reply = chat_with_claude(user_id, text)
     # Split long messages into chunks
     if len(reply) <= 4096:
