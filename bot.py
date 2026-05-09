@@ -247,8 +247,13 @@ async def cmd_summary(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
         "Give me a concise summary of my training load and key metrics from the last 7 days. "
         "Flag anything I should pay attention to.",
     )
+# Split long messages into chunks
+if len(reply) <= 4096:
     await update.message.reply_text(reply)
-
+else:
+    chunks = [reply[i:i+4096] for i in range(0, len(reply), 4096)]
+    for chunk in chunks:
+        await update.message.reply_text(chunk)
 
 async def cmd_readiness(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text("Checking your recovery status…")
@@ -257,8 +262,13 @@ async def cmd_readiness(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
         "Based on my sleep, HRV, and recent training load, how recovered am I today? "
         "Should I go ahead with today's planned session as-is, modify it, or rest?",
     )
+# Split long messages into chunks
+if len(reply) <= 4096:
     await update.message.reply_text(reply)
-
+else:
+    chunks = [reply[i:i+4096] for i in range(0, len(reply), 4096)]
+    for chunk in chunks:
+        await update.message.reply_text(chunk)
 
 async def cmd_plan(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text("Loading your upcoming workouts…")
@@ -266,8 +276,13 @@ async def cmd_plan(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
         update.effective_user.id,
         "What workouts do I have planned this week? Give me a brief overview and any coaching notes.",
     )
+# Split long messages into chunks
+if len(reply) <= 4096:
     await update.message.reply_text(reply)
-
+else:
+    chunks = [reply[i:i+4096] for i in range(0, len(reply), 4096)]
+    for chunk in chunks:
+        await update.message.reply_text(chunk)
 
 async def cmd_clear(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
     conversation_history.pop(update.effective_user.id, None)
@@ -283,8 +298,13 @@ async def handle_message(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
 
     try:
         reply = chat_with_claude(user_id, text)
-        await update.message.reply_text(reply)
-    except Exception as e:
+# Split long messages into chunks
+if len(reply) <= 4096:
+    await update.message.reply_text(reply)
+else:
+    chunks = [reply[i:i+4096] for i in range(0, len(reply), 4096)]
+    for chunk in chunks:
+        await update.message.reply_text(chunk)    except Exception as e:
         log.error(f"Error: {e}")
         await update.message.reply_text("Something went wrong fetching your data. Try again in a moment.")
 
@@ -339,8 +359,13 @@ async def handle_photo(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
     reply = response.content[0].text
     history.append({"role": "assistant", "content": reply})
 
+# Split long messages into chunks
+if len(reply) <= 4096:
     await update.message.reply_text(reply)
-
+else:
+    chunks = [reply[i:i+4096] for i in range(0, len(reply), 4096)]
+    for chunk in chunks:
+        await update.message.reply_text(chunk)
 # ── Entry point ───────────────────────────────────────────────────────────────
 
 def sync_loop():
